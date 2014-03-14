@@ -2,9 +2,6 @@ package com.github.ingarabr.mi;
 
 import java.util.TimerTask;
 
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.json.JSONConfiguration;
-
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
@@ -16,21 +13,19 @@ public class DataHenter extends TimerTask {
     private static final Logger logger = LoggerFactory.getLogger(DataHenter.class);
 
     private final Client esClient;
+    private final RestClient restClient;
 
-    public DataHenter(Client esClient) {
+    public DataHenter(Client esClient, RestClient restClient) {
         this.esClient = esClient;
+        this.restClient = restClient;
     }
 
     @Override
     public void run() {
         try {
-            logger.debug("Fetching....");
-            com.sun.jersey.api.client.Client httpClient = com.sun.jersey.api.client.Client.create();
-            DefaultClientConfig config = new DefaultClientConfig();
-            config.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+            String metrics = restClient.fetchData();
 
             ObjectMapper objectMapper = new ObjectMapper();
-            String metrics = httpClient.resource("http://localhost/metrics").get(String.class);
             JsonNode jsonNode = objectMapper.readTree(metrics);
 
             ObjectNode objectNode = objectMapper.createObjectNode();
@@ -39,7 +34,8 @@ public class DataHenter extends TimerTask {
             String toStore = objectMapper.writeValueAsString(objectNode);
             esClient.prepareIndex("metrics", "metric").setSource(toStore).get();
         } catch (Exception e) {
-            logger.debug("Unexpected error.", e);
+            logger.warn("Unexpected error.", e);
         }
     }
+
 }

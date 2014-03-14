@@ -1,2 +1,6 @@
 http:
   rootPath: /service/*
+restFetchers:
+  - host: http://localhost/metrics
+    interval: 1000
+  - host: http://localhost/metrics2
