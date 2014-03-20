@@ -86,6 +86,10 @@ app/panels/filtering/module.js
 ----------------
 app/panels/filtering/module.js
 
+app/panels/goal/module.js
+----------------
+app/panels/goal/module.js
+
 app/panels/histogram/module.js
 ----------------
 app/panels/histogram/interval.js
@@ -107,10 +111,6 @@ app/panels/map/module.js
 ----------------
 app/panels/map/lib/jquery.jvectormap.min.js
 app/panels/map/module.js
-
-app/panels/pie/module.js
-----------------
-app/panels/pie/module.js
 
 app/panels/query/module.js
 ----------------

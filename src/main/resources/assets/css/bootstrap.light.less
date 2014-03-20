@@ -4544,7 +4544,7 @@ input[type="submit"].btn.btn-mini {
   border-style: solid;
 }
 .tooltip.top .tooltip-arrow {
-  bottom: 0;
+  bottom: 1px;
   left: 50%;
   margin-left: -5px;
   border-width: 5px 5px 0;
@@ -4552,20 +4552,20 @@ input[type="submit"].btn.btn-mini {
 }
 .tooltip.right .tooltip-arrow {
   top: 50%;
-  left: 0;
+  left: 1px;
   margin-top: -5px;
   border-width: 5px 5px 5px 0;
   border-right-color: #000000;
 }
 .tooltip.left .tooltip-arrow {
   top: 50%;
-  right: 0;
+  right: 1px;
   margin-top: -5px;
   border-width: 5px 0 5px 5px;
   border-left-color: #000000;
 }
 .tooltip.bottom .tooltip-arrow {
-  top: 0;
+  top: 1px;
   left: 50%;
   margin-left: -5px;
   border-width: 0 5px 5px;
@@ -5797,6 +5797,7 @@ pre {
 .panel {
   display: inline-table;
   vertical-align: top;
+  margin-left: -1px;
 }
 .panel-container {
   padding: 0px 0px 0px 0px;
@@ -5839,7 +5840,14 @@ pre {
   z-index: 9999;
 }
 .dragInProgress .panel-container {
-  border: 3px solid rgba(100, 100, 100, 0.5);
+  border: 1px solid #007fff;
+}
+.panel-filler {
+  text-align: center;
+  margin: 5px;
+  width: 100%;
+  background: rgba(100, 100, 100, 0.5);
+  border: 1px solid #007fff;
 }
 .row-add-button {
   margin: 5px;
@@ -6064,7 +6072,6 @@ div.flot-text {
   color: #ff934b;
 }
 .dropdown-menu,
-.tooltip-inner,
 .nav-pills > li > a {
   -webkit-border-radius: 0 !important;
   -moz-border-radius: 0 !important;
