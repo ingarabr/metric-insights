@@ -1,5 +1,6 @@
 package com.github.ingarabr.mi;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Timer;
 
@@ -10,10 +11,12 @@ import com.yammer.dropwizard.config.Environment;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 public class ServerService extends Service<ServerConfiguration> {
 
@@ -52,6 +55,45 @@ public class ServerService extends Service<ServerConfiguration> {
 
         for (ServerConfiguration.RestFetcher restFetcher : configuration.getRestFetchers()) {
             createTimer(restFetcher, configuration.getDefaultInterval());
+        }
+
+        createIndex(client);
+    }
+
+    private void createIndex(Client client) {
+        String indexName = "metrics";
+        String type = "metric";
+        try {
+            XContentBuilder builder = jsonBuilder()
+                .startObject()
+                    .startObject(type)
+                        .startObject("properties")
+                            .startObject("@timestamp")
+                                .field("type", "date")
+                            .endObject()
+                            .startObject("application")
+                                .field("type", "string")
+                                .field("index", "not_analyzed")
+                            .endObject()
+                            .startObject("environment")
+                                .field("type", "string")
+                                .field("index", "not_analyzed")
+                            .endObject()
+                            .startObject("host")
+                                .field("type", "string")
+                                .field("index", "not_analyzed")
+                            .endObject()
+                        .endObject()
+                    .endObject()
+                .endObject();
+
+            if (client.admin().indices().prepareExists(indexName).get().isExists()) {
+                client.admin().indices().preparePutMapping(indexName).setType(type).setSource(builder).get();
+            } else {
+                client.admin().indices().prepareCreate(indexName).addMapping(type, builder).get();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
