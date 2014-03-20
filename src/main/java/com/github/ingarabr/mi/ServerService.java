@@ -58,7 +58,7 @@ public class ServerService extends Service<ServerConfiguration> {
     private void createTimer(ServerConfiguration.RestFetcher restFetcher) {
         logger.info("Creating timer task to fetch data from {} with interval {}", restFetcher.getHost(), restFetcher.getInterval());
         Timer fetcher = new Timer("fetcher", true);
-        fetcher.schedule(new DataHenter(client, new RestClient(restFetcher.getHost())), 10, restFetcher.getInterval());
+        fetcher.schedule(new DataHenter(client, new RestClient(restFetcher.getHost()), restFetcher.getTags()), 10, restFetcher.getInterval());
         tasks.add(fetcher);
     }
 

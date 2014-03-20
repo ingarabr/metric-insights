@@ -1,5 +1,6 @@
 package com.github.ingarabr.mi;
 
+import java.util.Map;
 import java.util.TimerTask;
 
 import org.codehaus.jackson.JsonNode;
@@ -14,10 +15,12 @@ public class DataHenter extends TimerTask {
 
     private final Client esClient;
     private final RestClient restClient;
+    private final Map<String, String> tags;
 
-    public DataHenter(Client esClient, RestClient restClient) {
+    public DataHenter(Client esClient, RestClient restClient, Map<String, String> tags) {
         this.esClient = esClient;
         this.restClient = restClient;
+        this.tags = tags;
     }
 
     @Override
@@ -31,6 +34,9 @@ public class DataHenter extends TimerTask {
             ObjectNode objectNode = objectMapper.createObjectNode();
             objectNode.put("@timestamp", System.currentTimeMillis());
             objectNode.put("metrics", jsonNode);
+            for (Map.Entry<String, String> tag : tags.entrySet()) {
+                objectNode.put(tag.getKey(), tag.getValue());
+            }
             String toStore = objectMapper.writeValueAsString(objectNode);
             esClient.prepareIndex("metrics", "metric").setSource(toStore).get();
         } catch (Exception e) {

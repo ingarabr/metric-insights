@@ -1,7 +1,9 @@
 package com.github.ingarabr.mi;
 
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import com.yammer.dropwizard.config.Configuration;
 
@@ -29,6 +31,8 @@ public class ServerConfiguration extends Configuration {
         @NotEmpty
         @JsonProperty
         private String host;
+        @JsonProperty
+        private Map<String, String> tags;
 
         @JsonProperty
         private int interval = 10000;
@@ -39,6 +43,13 @@ public class ServerConfiguration extends Configuration {
 
         public int getInterval() {
             return interval;
+        }
+
+        public Map<String, String> getTags() {
+            if (tags != null) {
+                return tags;
+            }
+            return Collections.emptyMap();
         }
     }
 

@@ -3,4 +3,9 @@ http:
 restFetchers:
   - host: http://localhost/metrics
     interval: 1000
+    tags:
+      application: 123
+      host: localhost
+      minTag: tada
+      terje: erKul
   - host: http://localhost/metrics2
