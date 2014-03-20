@@ -18,12 +18,19 @@ public class ServerConfiguration extends Configuration {
     @JsonProperty
     private String esPath;
 
+    @JsonProperty
+    private Integer defaultInterval = 60000;
+
     public List<RestFetcher> getRestFetchers() {
         return restFetchers;
     }
 
     public String getEsPath() {
         return esPath;
+    }
+
+    public Integer getDefaultInterval() {
+        return defaultInterval;
     }
 
     public static class RestFetcher {
@@ -35,13 +42,13 @@ public class ServerConfiguration extends Configuration {
         private Map<String, String> tags;
 
         @JsonProperty
-        private int interval = 10000;
+        private Integer interval;
 
         public String getHost() {
             return host;
         }
 
-        public int getInterval() {
+        public Integer getInterval() {
             return interval;
         }
 

@@ -1,5 +1,6 @@
 http:
   rootPath: /service/*
+defaultInterval: 60000
 restFetchers:
   - host: http://localhost/metrics
     interval: 1000

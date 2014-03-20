@@ -51,14 +51,19 @@ public class ServerService extends Service<ServerConfiguration> {
         environment.addResource(new MyResource(client));
 
         for (ServerConfiguration.RestFetcher restFetcher : configuration.getRestFetchers()) {
-            createTimer(restFetcher);
+            createTimer(restFetcher, configuration.getDefaultInterval());
         }
     }
 
-    private void createTimer(ServerConfiguration.RestFetcher restFetcher) {
-        logger.info("Creating timer task to fetch data from {} with interval {}", restFetcher.getHost(), restFetcher.getInterval());
+    private void createTimer(ServerConfiguration.RestFetcher restFetcher, Integer defaultInterval) {
+        Integer interval = restFetcher.getInterval();
+        if (interval == null) {
+            interval = defaultInterval;
+        }
+
+        logger.info("Creating timer task to fetch data from {} with interval {}", restFetcher.getHost(), interval);
         Timer fetcher = new Timer("fetcher", true);
-        fetcher.schedule(new DataHenter(client, new RestClient(restFetcher.getHost()), restFetcher.getTags()), 10, restFetcher.getInterval());
+        fetcher.schedule(new DataHenter(client, new RestClient(restFetcher.getHost()), restFetcher.getTags()), 1000, interval);
         tasks.add(fetcher);
     }
 
