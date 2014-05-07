@@ -1,5 +1,7 @@
 package com.github.ingarabr.mi;
 
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Timer;
@@ -17,7 +19,6 @@ import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 public class ServerService extends Service<ServerConfiguration> {
 
@@ -39,7 +40,10 @@ public class ServerService extends Service<ServerConfiguration> {
     }
 
     public ServerService() {
-        node = NodeBuilder.nodeBuilder().settings(ImmutableSettings.builder()).build();
+        node = NodeBuilder.nodeBuilder()
+                .settings(ImmutableSettings.builder()
+                        .put("http.enabled", false))
+                .build();
         node.start();
     }
 
