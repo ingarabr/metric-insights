@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Timer;
 
+import com.github.ingarabr.mi.servlet.ElasticSearchHttpServlet;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.assets.AssetsBundle;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -22,8 +23,8 @@ public class ServerService extends Service<ServerConfiguration> {
 
     private static final Logger logger = LoggerFactory.getLogger(ServerService.class);
 
-    private final Client client;
     private final ArrayList<Timer> tasks = new ArrayList<Timer>();
+    private final Node node;
 
     public static void main(String[] args) throws Exception {
         String[] serverArgs = new String[args.length + 2];
@@ -38,9 +39,8 @@ public class ServerService extends Service<ServerConfiguration> {
     }
 
     public ServerService() {
-        Node node = NodeBuilder.nodeBuilder().settings(ImmutableSettings.builder()).build();
+        node = NodeBuilder.nodeBuilder().settings(ImmutableSettings.builder()).build();
         node.start();
-        client = node.client();
     }
 
     @Override
@@ -51,13 +51,15 @@ public class ServerService extends Service<ServerConfiguration> {
 
     @Override
     public void run(ServerConfiguration configuration, Environment environment) throws Exception {
-        environment.addResource(new MyResource(client));
+        environment.addResource(new MyResource(node.client()));
+        ElasticSearchHttpServlet elasticSearchHttpServlet = new ElasticSearchHttpServlet(node);
+        environment.addServlet(elasticSearchHttpServlet, "/es/*");
 
         for (ServerConfiguration.RestFetcher restFetcher : configuration.getRestFetchers()) {
             createTimer(restFetcher, configuration.getDefaultInterval());
         }
 
-        createIndex(client);
+        createIndex(node.client());
     }
 
     private void createIndex(Client client) {
@@ -105,7 +107,7 @@ public class ServerService extends Service<ServerConfiguration> {
 
         logger.info("Creating timer task to fetch data from {} with interval {}", restFetcher.getHost(), interval);
         Timer fetcher = new Timer("fetcher", true);
-        fetcher.schedule(new DataHenter(client, new RestClient(restFetcher.getHost()), restFetcher.getTags()), 1000, interval);
+        fetcher.schedule(new DataHenter(node.client(), new RestClient(restFetcher.getHost()), restFetcher.getTags()), 1000, interval);
         tasks.add(fetcher);
     }
 
