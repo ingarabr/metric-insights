@@ -1,11 +1,10 @@
 package com.github.ingarabr.mi;
 
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Timer;
 
+import com.github.ingarabr.mi.mapper.DefaultMapper;
 import com.github.ingarabr.mi.servlet.ElasticSearchHttpServlet;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.assets.AssetsBundle;
@@ -70,28 +69,7 @@ public class ServerService extends Service<ServerConfiguration> {
         String indexName = "metrics";
         String type = "metric";
         try {
-            XContentBuilder builder = jsonBuilder()
-                .startObject()
-                    .startObject(type)
-                        .startObject("properties")
-                            .startObject("@timestamp")
-                                .field("type", "date")
-                            .endObject()
-                            .startObject("application")
-                                .field("type", "string")
-                                .field("index", "not_analyzed")
-                            .endObject()
-                            .startObject("environment")
-                                .field("type", "string")
-                                .field("index", "not_analyzed")
-                            .endObject()
-                            .startObject("host")
-                                .field("type", "string")
-                                .field("index", "not_analyzed")
-                            .endObject()
-                        .endObject()
-                    .endObject()
-                .endObject();
+            XContentBuilder builder = ElasticSearchMapping.getConfig(type);
 
             if (client.admin().indices().prepareExists(indexName).get().isExists()) {
                 client.admin().indices().preparePutMapping(indexName).setType(type).setSource(builder).get();
@@ -111,7 +89,7 @@ public class ServerService extends Service<ServerConfiguration> {
 
         logger.info("Creating timer task to fetch data from {} with interval {}", restFetcher.getHost(), interval);
         Timer fetcher = new Timer("fetcher", true);
-        fetcher.schedule(new DataHenter(node.client(), new RestClient(restFetcher.getHost()), restFetcher.getTags()), 1000, interval);
+        fetcher.schedule(new MetricFetcher(node.client(), new RestClient(restFetcher.getHost()), restFetcher.getTags(), new DefaultMapper()), 1000, interval);
         tasks.add(fetcher);
     }
 

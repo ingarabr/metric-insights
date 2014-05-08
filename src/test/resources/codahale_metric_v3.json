@@ -1,0 +1,53 @@
+{
+    "version": "3.0.0",
+    "gauges": {
+        "gc.PS-MarkSweep.count": {
+            "value": 1
+        },
+        "gc.PS-MarkSweep.time": {
+            "value": 1336
+        }
+    },
+    "counters": {},
+    "histograms": {},
+    "meters": {},
+    "timers": {
+        "ske.fastsetting.meldingsproduksjon.aarbeidsforhold.akka.AArbeidsforholdGrunnlagsActor.actor": {
+            "count": 19,
+            "max": 1150.665855,
+            "mean": 608.6415214285714,
+            "min": 298.616915,
+            "p50": 536.874001,
+            "p75": 800.71171125,
+            "p95": 1150.665855,
+            "p98": 1150.665855,
+            "p99": 1150.665855,
+            "p999": 1150.665855,
+            "stddev": 250.2472460508675,
+            "m15_rate": 2.4582082689879734E-20,
+            "m1_rate": 3.046569616619309E-4,
+            "m5_rate": 2.781318375042152E-6,
+            "mean_rate": 1.0888014011530818E-4,
+            "duration_units": "milliseconds",
+            "rate_units": "calls/second"
+        },
+        "ske.fastsetting.meldingsproduksjon.actors.LeverTilUtsendingActor.actor": {
+            "count": 19,
+            "max": 1159.859831,
+            "mean": 359.00886685714283,
+            "min": 139.556109,
+            "p50": 291.078822,
+            "p75": 455.85648249999997,
+            "p95": 1159.859831,
+            "p98": 1159.859831,
+            "p99": 1159.859831,
+            "p999": 1159.859831,
+            "stddev": 267.5539269778405,
+            "m15_rate": 2.4582082689879734E-20,
+            "m1_rate": 3.046571409644643E-4,
+            "m5_rate": 2.7813183750423027E-6,
+            "mean_rate": 1.0956147573344945E-4,
+            "duration_units": "milliseconds",
+            "rate_units": "calls/second"
+        }
+    }}
