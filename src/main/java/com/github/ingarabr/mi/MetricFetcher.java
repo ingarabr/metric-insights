@@ -33,7 +33,7 @@ public class MetricFetcher extends TimerTask {
                 esClient.prepareIndex("metrics", "metric").setSource(toStore).get();
             }
         } catch (Exception e) {
-            logger.warn("Unexpected error.", e);
+            logger.warn("Unexpected error on " + restClient.toString(), e);
         }
     }
 

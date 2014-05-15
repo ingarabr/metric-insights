@@ -20,4 +20,9 @@ public class RestClient {
         return httpClient.resource(path).get(String.class);
     }
 
+
+    @Override
+    public String toString() {
+        return String.format("%s [path: '%s']", getClass().getSimpleName(), path);
+    }
 }
