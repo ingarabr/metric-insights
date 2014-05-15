@@ -11,7 +11,7 @@ mvn clean install -Ponejar
 ```
 
 
-Configurastion example:
+Configuration example:
 
 ```yml
 http:
@@ -20,6 +20,7 @@ defaultInterval: 60000
 restFetchers:
   - host: http://localhost/metrics
     interval: 10000
+    mapper: default|codahale_v3
     tags:
       application: metric-insight
       host: localhost

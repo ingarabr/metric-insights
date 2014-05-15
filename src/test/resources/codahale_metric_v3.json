@@ -12,7 +12,7 @@
     "histograms": {},
     "meters": {},
     "timers": {
-        "ske.fastsetting.meldingsproduksjon.aarbeidsforhold.akka.AArbeidsforholdGrunnlagsActor.actor": {
+        "my.metric.timer1": {
             "count": 19,
             "max": 1150.665855,
             "mean": 608.6415214285714,
@@ -31,7 +31,7 @@
             "duration_units": "milliseconds",
             "rate_units": "calls/second"
         },
-        "ske.fastsetting.meldingsproduksjon.actors.LeverTilUtsendingActor.actor": {
+        "my.metric.timer2": {
             "count": 19,
             "max": 1159.859831,
             "mean": 359.00886685714283,

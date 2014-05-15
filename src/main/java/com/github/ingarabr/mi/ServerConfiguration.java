@@ -40,9 +40,10 @@ public class ServerConfiguration extends Configuration {
         private String host;
         @JsonProperty
         private Map<String, String> tags;
-
         @JsonProperty
         private Integer interval;
+        @JsonProperty
+        private String mapper;
 
         public String getHost() {
             return host;
@@ -50,6 +51,10 @@ public class ServerConfiguration extends Configuration {
 
         public Integer getInterval() {
             return interval;
+        }
+
+        public String getMapper() {
+            return mapper;
         }
 
         public Map<String, String> getTags() {

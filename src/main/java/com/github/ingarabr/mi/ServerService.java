@@ -4,8 +4,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Timer;
 
+import com.github.ingarabr.mi.mapper.CodahaleMetricV3Mapper;
 import com.github.ingarabr.mi.mapper.DefaultMapper;
+import com.github.ingarabr.mi.mapper.MetricMapper;
 import com.github.ingarabr.mi.servlet.ElasticSearchHttpServlet;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.assets.AssetsBundle;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -22,6 +26,11 @@ import org.slf4j.LoggerFactory;
 public class ServerService extends Service<ServerConfiguration> {
 
     private static final Logger logger = LoggerFactory.getLogger(ServerService.class);
+    private static final String DEFAULT_MAPPER = "default";
+    private static final ImmutableMap<String, MetricMapper> MAPPERS = ImmutableMap.of(
+            DEFAULT_MAPPER, new DefaultMapper(),
+            "codahale_v3", new CodahaleMetricV3Mapper()
+    );
 
     private final ArrayList<Timer> tasks = new ArrayList<Timer>();
     private final Node node;
@@ -89,7 +98,8 @@ public class ServerService extends Service<ServerConfiguration> {
 
         logger.info("Creating timer task to fetch data from {} with interval {}", restFetcher.getHost(), interval);
         Timer fetcher = new Timer("fetcher", true);
-        fetcher.schedule(new MetricFetcher(node.client(), new RestClient(restFetcher.getHost()), restFetcher.getTags(), new DefaultMapper()), 1000, interval);
+        MetricMapper mapper = Optional.fromNullable(MAPPERS.get(restFetcher.getMapper())).or(MAPPERS.get(DEFAULT_MAPPER));
+        fetcher.schedule(new MetricFetcher(node.client(), new RestClient(restFetcher.getHost()), restFetcher.getTags(), mapper), 1000, interval);
         tasks.add(fetcher);
     }
 
