@@ -1,14 +1,13 @@
 package com.github.ingarabr.mi;
 
-import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
-
 import org.elasticsearch.client.Client;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class EsWriter implements Runnable {
 
     private final Client esClient;
-    private final Queue<String> writeQueue = new LinkedBlockingQueue<String>();
+    private final BlockingQueue<String> writeQueue = new LinkedBlockingQueue<String>();
 
     private boolean run = true;
 
@@ -17,10 +16,16 @@ public class EsWriter implements Runnable {
     }
 
     public void run() {
-        while (run) {
-            String metric = writeQueue.poll();
-            log();
-            esClient.prepareIndex("metrics", "metric").setSource(metric).get();
+        try {
+            while (run) {
+                String metric = writeQueue.take();
+                log();
+                if (metric != null) {
+                    esClient.prepareIndex("metrics", "metric").setSource(metric).get();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
