@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 public class ServerService extends Service<ServerConfiguration> {
 
     private static final Logger logger = LoggerFactory.getLogger(ServerService.class);
+
     private static final String DEFAULT_MAPPER = "default";
     private static final ImmutableMap<String, MetricMapper> MAPPERS = ImmutableMap.of(
             DEFAULT_MAPPER, new DefaultMapper(),
@@ -45,15 +46,14 @@ public class ServerService extends Service<ServerConfiguration> {
             i++;
             serverArgs[i] = arg;
         }
-        new ServerService().run(serverArgs);
     }
 
     public ServerService() {
         node = NodeBuilder.nodeBuilder()
                 .settings(ImmutableSettings.builder()
-                        .put("http.enabled", false)
-                        .put("node.local", true)
-                        .put("discovery.zen.ping.multicast.enabled", false)
+                                .put("http.enabled", false)
+                                .put("node.local", true)
+                                .put("discovery.zen.ping.multicast.enabled", false)
                 )
                 .build();
         node.start();
@@ -77,6 +77,22 @@ public class ServerService extends Service<ServerConfiguration> {
             createTimer(restFetcher, configuration.getDefaultInterval());
         }
         new Thread(esWriter).start();
+
+        shutdownHook();
+    }
+
+    private void shutdownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+            public void run() {
+                for (Timer task : tasks) {
+                    task.cancel();
+                }
+                if (esWriter != null) {
+                    esWriter.stop();
+                }
+                node.stop();
+            }
+        }));
     }
 
     private void createIndex(Client client) {
@@ -91,7 +107,7 @@ public class ServerService extends Service<ServerConfiguration> {
                 client.admin().indices().prepareCreate(indexName).addMapping(type, builder).get();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.warn("Failed to create indices", e);
         }
     }
 
