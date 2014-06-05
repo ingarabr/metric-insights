@@ -4,7 +4,6 @@ import org.elasticsearch.client.Client;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.elasticsearch.client.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +30,7 @@ public class EsWriter implements Runnable {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error in EsWriter", e);
         }
     }
 
