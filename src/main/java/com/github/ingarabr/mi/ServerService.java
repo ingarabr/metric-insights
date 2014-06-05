@@ -68,12 +68,12 @@ public class ServerService extends Service<ServerConfiguration> {
         ElasticSearchHttpServlet elasticSearchHttpServlet = new ElasticSearchHttpServlet(node);
         environment.addServlet(elasticSearchHttpServlet, "/es/*");
 
+        createIndex(node.client());
         esWriter = new EsWriter(node.client());
+
         for (ServerConfiguration.RestFetcher restFetcher : configuration.getRestFetchers()) {
             createTimer(restFetcher, configuration.getDefaultInterval());
         }
-
-        createIndex(node.client());
     }
 
     private void createIndex(Client client) {
