@@ -70,10 +70,10 @@ public class ServerService extends Service<ServerConfiguration> {
 
         createIndex(node.client());
         esWriter = new EsWriter(node.client());
-
         for (ServerConfiguration.RestFetcher restFetcher : configuration.getRestFetchers()) {
             createTimer(restFetcher, configuration.getDefaultInterval());
         }
+        new Thread(esWriter).start();
     }
 
     private void createIndex(Client client) {
