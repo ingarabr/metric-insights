@@ -4,8 +4,12 @@ import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.elasticsearch.client.Client;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EsWriter implements Runnable {
+
+    private static final Logger logger = LoggerFactory.getLogger(EsWriter.class);
 
     private final Client esClient;
     private final Queue<String> writeQueue = new LinkedBlockingQueue<String>();
@@ -26,7 +30,7 @@ public class EsWriter implements Runnable {
 
     private void log() {
         if (writeQueue.size() > 10) {
-            System.out.println("ElasticSearch WriteQueue size: " + writeQueue.size());
+            logger.debug("ElasticSearch WriteQueue size: {}", writeQueue.size());
         }
     }
 
@@ -37,4 +41,5 @@ public class EsWriter implements Runnable {
     public void stop() {
         run = false;
     }
+
 }

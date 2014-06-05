@@ -5,7 +5,6 @@ import java.util.TimerTask;
 
 import com.github.ingarabr.mi.mapper.MetricMapper;
 
-import org.elasticsearch.client.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +27,6 @@ public class MetricFetcher extends TimerTask {
     public void run() {
         try {
             String metrics = restClient.fetchData();
-
             for (String toStore : mapper.map(metrics, tags)) {
                 esClient.addMetric(toStore);
             }
