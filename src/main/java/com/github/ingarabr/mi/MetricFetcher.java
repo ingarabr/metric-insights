@@ -12,12 +12,12 @@ import org.slf4j.LoggerFactory;
 public class MetricFetcher extends TimerTask {
     private static final Logger logger = LoggerFactory.getLogger(MetricFetcher.class);
 
-    private final Client esClient;
+    private final EsWriter esClient;
     private final RestClient restClient;
     private final Map<String, String> tags;
     private final MetricMapper mapper;
 
-    public MetricFetcher(Client esClient, RestClient restClient, Map<String, String> tags, MetricMapper mapper) {
+    public MetricFetcher(EsWriter esClient, RestClient restClient, Map<String, String> tags, MetricMapper mapper) {
         this.esClient = esClient;
         this.restClient = restClient;
         this.tags = tags;
@@ -30,7 +30,7 @@ public class MetricFetcher extends TimerTask {
             String metrics = restClient.fetchData();
 
             for (String toStore : mapper.map(metrics, tags)) {
-                esClient.prepareIndex("metrics", "metric").setSource(toStore).get();
+                esClient.addMetric(toStore);
             }
         } catch (Exception e) {
             logger.warn("Unexpected error on " + restClient.toString(), e);

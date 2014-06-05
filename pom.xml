@@ -10,7 +10,7 @@
     <name>Metric insights</name>
 
     <properties>
-        <es.version>1.0.1</es.version>
+        <es.version>1.2.1</es.version>
         <dropwizard.version>0.6.2</dropwizard.version>
     </properties>
 
