@@ -51,7 +51,10 @@ public class ServerService extends Service<ServerConfiguration> {
     public ServerService() {
         node = NodeBuilder.nodeBuilder()
                 .settings(ImmutableSettings.builder()
-                        .put("http.enabled", false))
+                        .put("http.enabled", false)
+                        .put("node.local", true)
+                        .put("discovery.zen.ping.multicast.enabled", false)
+                )
                 .build();
         node.start();
     }
