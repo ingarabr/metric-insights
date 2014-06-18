@@ -50,6 +50,7 @@ app/directives/tip.js
 app/directives/confirmClick.js
 app/directives/esVersion.js
 app/directives/configModal.js
+app/directives/resizable.js
 app/directives/all.js
 app/filters/all.js
 app/app.js
@@ -131,6 +132,7 @@ app/panels/stats/module.js
 
 app/panels/table/module.js
 ----------------
+vendor/jsonpath.js
 app/panels/table/module.js
 
 app/panels/terms/module.js

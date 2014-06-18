@@ -35,7 +35,7 @@ public class ServerService extends Service<ServerConfiguration> {
 
     private final ArrayList<Timer> tasks = new ArrayList<Timer>();
     private final Node node;
-    private EsWriter esWriter;
+    private final EsWriter esWriter;
 
     public static void main(String[] args) throws Exception {
         String[] serverArgs = new String[args.length + 2];
@@ -46,6 +46,7 @@ public class ServerService extends Service<ServerConfiguration> {
             i++;
             serverArgs[i] = arg;
         }
+        new ServerService().run(serverArgs);
     }
 
     public ServerService() {
@@ -57,6 +58,7 @@ public class ServerService extends Service<ServerConfiguration> {
                 )
                 .build();
         node.start();
+        esWriter = new EsWriter(node.client());
     }
 
     @Override
@@ -72,7 +74,6 @@ public class ServerService extends Service<ServerConfiguration> {
         environment.addServlet(elasticSearchHttpServlet, "/es/*");
 
         createIndex(node.client());
-        esWriter = new EsWriter(node.client());
         for (ServerConfiguration.RestFetcher restFetcher : configuration.getRestFetchers()) {
             createTimer(restFetcher, configuration.getDefaultInterval());
         }

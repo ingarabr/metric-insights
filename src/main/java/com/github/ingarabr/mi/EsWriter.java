@@ -1,11 +1,11 @@
 package com.github.ingarabr.mi;
 
 import org.elasticsearch.client.Client;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class EsWriter implements Runnable {
 
