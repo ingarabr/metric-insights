@@ -16,16 +16,20 @@ public class EsWriter implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(EsWriter.class);
     private static final DateTimeFormatter DTF = DateTimeFormat.forPattern("yyyy.MM.dd");
 
-    private final Client esClient;
-    private final BlockingQueue<String> writeQueue = new LinkedBlockingQueue<String>();
+    private final BlockingQueue<String> writeQueue = new LinkedBlockingQueue<>();
+
+    private Client esClient;
 
     private boolean run = true;
 
-    public EsWriter(Client esClient) {
+    public void setEsClient(Client esClient) {
         this.esClient = esClient;
     }
 
     public void run() {
+        if (esClient == null) {
+            throw new NullPointerException("Reqire ElasticSearch Client is missing");
+        }
         try {
             while (run) {
                 String metric = writeQueue.take();
