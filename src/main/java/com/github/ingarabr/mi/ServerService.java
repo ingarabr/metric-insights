@@ -96,7 +96,7 @@ public class ServerService extends Service<ServerConfiguration> {
     private void createIndexTemplate(Client client) {
         try {
 
-            client.admin().indices().preparePutTemplate("metricsTemplate")
+            client.admin().indices().preparePutTemplate("metrics_template")
                     .setSource("{\n" +
                     "  \"template\": \"metrics-*\",\n" +
                     "  \"settings\": {\n" +
@@ -124,7 +124,7 @@ public class ServerService extends Service<ServerConfiguration> {
                     "      ],\n" +
                     "      \"properties\": {\n" +
                     "        \"@timestamp\": {\n" +
-                    "          \"type\": \"date\",\n" +
+                    "          \"type\": \"date\"\n" +
                     "          \n" +
                     "        }\n" +
                     "      }\n" +
