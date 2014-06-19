@@ -1,9 +1,5 @@
 package com.github.ingarabr.mi;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Timer;
-
 import com.github.ingarabr.mi.mapper.CodahaleMetricV3Mapper;
 import com.github.ingarabr.mi.mapper.DefaultMapper;
 import com.github.ingarabr.mi.mapper.MetricMapper;
@@ -14,14 +10,15 @@ import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.assets.AssetsBundle;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
-
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.ImmutableSettings;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
+import java.util.Timer;
+import java.util.concurrent.ExecutionException;
 
 public class ServerService extends Service<ServerConfiguration> {
 
@@ -52,9 +49,9 @@ public class ServerService extends Service<ServerConfiguration> {
     public ServerService() {
         node = NodeBuilder.nodeBuilder()
                 .settings(ImmutableSettings.builder()
-                                .put("http.enabled", false)
-                                .put("node.local", true)
-                                .put("discovery.zen.ping.multicast.enabled", false)
+                        .put("http.enabled", false)
+                        .put("node.local", true)
+                        .put("discovery.zen.ping.multicast.enabled", false)
                 )
                 .build();
         node.start();
@@ -73,7 +70,7 @@ public class ServerService extends Service<ServerConfiguration> {
         ElasticSearchHttpServlet elasticSearchHttpServlet = new ElasticSearchHttpServlet(node);
         environment.addServlet(elasticSearchHttpServlet, "/es/*");
 
-        createIndex(node.client());
+        createIndexTemplate(node.client());
         for (ServerConfiguration.RestFetcher restFetcher : configuration.getRestFetchers()) {
             createTimer(restFetcher, configuration.getDefaultInterval());
         }
@@ -96,19 +93,46 @@ public class ServerService extends Service<ServerConfiguration> {
         }));
     }
 
-    private void createIndex(Client client) {
-        String indexName = "metrics";
-        String type = "metric";
+    private void createIndexTemplate(Client client) {
         try {
-            XContentBuilder builder = ElasticSearchMapping.getConfig(type);
 
-            if (client.admin().indices().prepareExists(indexName).get().isExists()) {
-                client.admin().indices().preparePutMapping(indexName).setType(type).setSource(builder).get();
-            } else {
-                client.admin().indices().prepareCreate(indexName).addMapping(type, builder).get();
-            }
-        } catch (IOException e) {
-            logger.warn("Failed to create indices", e);
+            client.admin().indices().preparePutTemplate("metricsTemplate")
+                    .setSource("{\n" +
+                    "  \"template\": \"metrics-*\",\n" +
+                    "  \"settings\": {\n" +
+                    "    \"index.number_of_shards\": 1,\n" +
+                    "    \"index.number_of_replicas\": 0,\n" +
+                    "    \"index.analysis.analyzer.default.stopwords\": \"_none_\",\n" +
+                    "    \"index.analysis.analyzer.default.type\": \"standard\"\n" +
+                    "  },\n" +
+                    "  \"mappings\": {\n" +
+                    "    \"_default_\": {\n" +
+                    "      \"_all\": {\n" +
+                    "        \"enabled\": false\n" +
+                    "      },\n" +
+                    "      \"dynamic_templates\": [\n" +
+                    "        {\n" +
+                    "          \"string_template\": {\n" +
+                    "            \"match\": \"*\",\n" +
+                    "            \"match_mapping_type\": \"string\",\n" +
+                    "            \"mapping\": {\n" +
+                    "              \"type\": \"string\",\n" +
+                    "              \"index\": \"not_analyzed\"\n" +
+                    "            }\n" +
+                    "          }\n" +
+                    "        }\n" +
+                    "      ],\n" +
+                    "      \"properties\": {\n" +
+                    "        \"@timestamp\": {\n" +
+                    "          \"type\": \"date\",\n" +
+                    "          \n" +
+                    "        }\n" +
+                    "      }\n" +
+                    "    }\n" +
+                    "  }\n" +
+                    "}").execute().get();
+        } catch (InterruptedException | ExecutionException e) {
+            logger.error("Failed to create template", e);
         }
     }
 
