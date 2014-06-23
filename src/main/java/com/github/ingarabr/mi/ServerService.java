@@ -39,6 +39,7 @@ public class ServerService extends Service<ServerConfiguration> {
     private final ArrayList<Timer> tasks = new ArrayList<>();
     private final EsWriter esWriter;
     private Node node;
+    private Thread esWriterThread;
 
     public static void main(String[] args) throws Exception {
         String[] serverArgs = new String[args.length + 2];
@@ -64,8 +65,10 @@ public class ServerService extends Service<ServerConfiguration> {
 
     @Override
     public void run(ServerConfiguration configuration, Environment environment) throws Exception {
-        for (ServerConfiguration.RestFetcher restFetcher : configuration.getRestFetchers()) {
-            createTimer(restFetcher, configuration.getDefaultInterval());
+        if (configuration.getRestFetchers() != null) {
+            for (ServerConfiguration.RestFetcher restFetcher : configuration.getRestFetchers()) {
+                createTimer(restFetcher, configuration.getDefaultInterval());
+            }
         }
 
         logger.info("Setting up elasticSearch");
@@ -84,7 +87,8 @@ public class ServerService extends Service<ServerConfiguration> {
         createIndexTemplate(node.client());
 
         esWriter.setEsClient(node.client());
-        new Thread(esWriter).start();
+        esWriterThread = new Thread(esWriter);
+        esWriterThread.start();
 
         logger.info("Metric insight is ready");
         shutdownHook();
@@ -97,6 +101,7 @@ public class ServerService extends Service<ServerConfiguration> {
                     task.cancel();
                 }
                 esWriter.stop();
+                esWriterThread.interrupt();
                 if (node != null) {
                     node.stop();
                 }

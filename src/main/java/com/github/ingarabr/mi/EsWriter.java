@@ -39,6 +39,8 @@ public class EsWriter implements Runnable {
                     esClient.prepareIndex(indexName, "metric").setSource(metric).get();
                 }
             }
+        } catch (InterruptedException e) {
+            logger.info("EsWriter interrupted", e);
         } catch (Exception e) {
             logger.error("Error in EsWriter", e);
         }
