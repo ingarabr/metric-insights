@@ -1,24 +1,30 @@
 package com.github.ingarabr.mi;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Timer;
+import java.util.concurrent.ExecutionException;
+
 import com.github.ingarabr.mi.mapper.CodahaleMetricV3Mapper;
 import com.github.ingarabr.mi.mapper.DefaultMapper;
 import com.github.ingarabr.mi.mapper.MetricMapper;
 import com.github.ingarabr.mi.servlet.ElasticSearchHttpServlet;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.CharStreams;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.assets.AssetsBundle;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
+
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.ArrayList;
-import java.util.Timer;
-import java.util.concurrent.ExecutionException;
 
 public class ServerService extends Service<ServerConfiguration> {
 
@@ -30,9 +36,10 @@ public class ServerService extends Service<ServerConfiguration> {
             "codahale_v3", new CodahaleMetricV3Mapper()
     );
 
-    private final ArrayList<Timer> tasks = new ArrayList<Timer>();
-    private final Node node;
+    private final ArrayList<Timer> tasks = new ArrayList<>();
     private final EsWriter esWriter;
+    private Node node;
+    private Thread esWriterThread;
 
     public static void main(String[] args) throws Exception {
         String[] serverArgs = new String[args.length + 2];
@@ -47,15 +54,7 @@ public class ServerService extends Service<ServerConfiguration> {
     }
 
     public ServerService() {
-        node = NodeBuilder.nodeBuilder()
-                .settings(ImmutableSettings.builder()
-                        .put("http.enabled", false)
-                        .put("node.local", true)
-                        .put("discovery.zen.ping.multicast.enabled", false)
-                )
-                .build();
-        node.start();
-        esWriter = new EsWriter(node.client());
+        esWriter = new EsWriter();
     }
 
     @Override
@@ -66,16 +65,32 @@ public class ServerService extends Service<ServerConfiguration> {
 
     @Override
     public void run(ServerConfiguration configuration, Environment environment) throws Exception {
+        if (configuration.getRestFetchers() != null) {
+            for (ServerConfiguration.RestFetcher restFetcher : configuration.getRestFetchers()) {
+                createTimer(restFetcher, configuration.getDefaultInterval());
+            }
+        }
+
+        logger.info("Setting up elasticSearch");
+        node = NodeBuilder.nodeBuilder()
+                .settings(ImmutableSettings.builder()
+                                .put("http.enabled", false)
+                                .put("node.local", true)
+                                .put("discovery.zen.ping.multicast.enabled", false)
+                )
+                .build();
+        node.start();
         environment.addResource(new MyResource(node.client()));
+
         ElasticSearchHttpServlet elasticSearchHttpServlet = new ElasticSearchHttpServlet(node);
         environment.addServlet(elasticSearchHttpServlet, "/es/*");
-
         createIndexTemplate(node.client());
-        for (ServerConfiguration.RestFetcher restFetcher : configuration.getRestFetchers()) {
-            createTimer(restFetcher, configuration.getDefaultInterval());
-        }
-        new Thread(esWriter).start();
 
+        esWriter.setEsClient(node.client());
+        esWriterThread = new Thread(esWriter);
+        esWriterThread.start();
+
+        logger.info("Metric insight is ready");
         shutdownHook();
     }
 
@@ -85,53 +100,20 @@ public class ServerService extends Service<ServerConfiguration> {
                 for (Timer task : tasks) {
                     task.cancel();
                 }
-                if (esWriter != null) {
-                    esWriter.stop();
+                esWriter.stop();
+                esWriterThread.interrupt();
+                if (node != null) {
+                    node.stop();
                 }
-                node.stop();
             }
         }));
     }
 
     private void createIndexTemplate(Client client) {
-        try {
-
-            client.admin().indices().preparePutTemplate("metrics_template")
-                    .setSource("{\n" +
-                    "  \"template\": \"metrics-*\",\n" +
-                    "  \"settings\": {\n" +
-                    "    \"index.number_of_shards\": 1,\n" +
-                    "    \"index.number_of_replicas\": 0,\n" +
-                    "    \"index.analysis.analyzer.default.stopwords\": \"_none_\",\n" +
-                    "    \"index.analysis.analyzer.default.type\": \"standard\"\n" +
-                    "  },\n" +
-                    "  \"mappings\": {\n" +
-                    "    \"_default_\": {\n" +
-                    "      \"_all\": {\n" +
-                    "        \"enabled\": false\n" +
-                    "      },\n" +
-                    "      \"dynamic_templates\": [\n" +
-                    "        {\n" +
-                    "          \"string_template\": {\n" +
-                    "            \"match\": \"*\",\n" +
-                    "            \"match_mapping_type\": \"string\",\n" +
-                    "            \"mapping\": {\n" +
-                    "              \"type\": \"string\",\n" +
-                    "              \"index\": \"not_analyzed\"\n" +
-                    "            }\n" +
-                    "          }\n" +
-                    "        }\n" +
-                    "      ],\n" +
-                    "      \"properties\": {\n" +
-                    "        \"@timestamp\": {\n" +
-                    "          \"type\": \"date\"\n" +
-                    "          \n" +
-                    "        }\n" +
-                    "      }\n" +
-                    "    }\n" +
-                    "  }\n" +
-                    "}").execute().get();
-        } catch (InterruptedException | ExecutionException e) {
+        try (InputStream is = getClass().getResourceAsStream("/config/metricTemplate.json")) {
+            String template = CharStreams.toString(new InputStreamReader(is));
+            client.admin().indices().preparePutTemplate("metricstemplate").setSource(template).execute().get();
+        } catch (InterruptedException | ExecutionException | IOException e) {
             logger.error("Failed to create template", e);
         }
     }

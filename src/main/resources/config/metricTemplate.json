@@ -1,0 +1,33 @@
+{
+    "template": "metrics-*",
+    "settings": {
+        "index.number_of_shards": 1,
+        "index.number_of_replicas": 0,
+        "index.analysis.analyzer.default.stopwords": "_none_",
+        "index.analysis.analyzer.default.type": "standard"
+    },
+    "mappings": {
+        "_default_": {
+            "_all": {
+                "enabled": false
+            },
+            "dynamic_templates": [
+                {
+                    "string_template": {
+                        "match": "*",
+                        "match_mapping_type": "string",
+                        "mapping": {
+                            "type": "string",
+                            "index": "not_analyzed"
+                        }
+                    }
+                }
+            ],
+            "properties": {
+                "@timestamp": {
+                    "type": "date"
+                }
+            }
+        }
+    }
+}
