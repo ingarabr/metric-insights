@@ -28,7 +28,7 @@ public class EsWriter implements Runnable {
 
     public void run() {
         if (esClient == null) {
-            throw new NullPointerException("Reqire ElasticSearch Client is missing");
+            throw new NullPointerException("Required ElasticSearch Client is null");
         }
         try {
             while (run) {

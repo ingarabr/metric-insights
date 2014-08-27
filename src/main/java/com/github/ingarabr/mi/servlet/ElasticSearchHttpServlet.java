@@ -25,7 +25,7 @@ public class ElasticSearchHttpServlet extends HttpServlet {
         ServletRestChannel channel = new ServletRestChannel(request, resp);
         try {
             restController.dispatchRequest(request, channel);
-            channel.latch.await();
+            channel.await();
         } catch (Exception e) {
             throw new IOException("failed to dispatch request", e);
         }

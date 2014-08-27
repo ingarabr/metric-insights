@@ -1,19 +1,16 @@
 package com.github.ingarabr.mi.servlet;
 
-import java.io.IOException;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-
 import com.google.common.collect.ImmutableList;
-
 import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.io.Streams;
 import org.elasticsearch.rest.RestRequest;
 import org.elasticsearch.rest.support.RestUtils;
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ServletRestRequest extends RestRequest {
 
@@ -28,7 +25,7 @@ public class ServletRestRequest extends RestRequest {
     public ServletRestRequest(HttpServletRequest servletRequest) throws IOException {
         this.servletRequest = servletRequest;
         this.method = Method.valueOf(servletRequest.getMethod());
-        this.params = new HashMap<String, String>();
+        this.params = new HashMap<>();
 
         if (servletRequest.getQueryString() != null) {
             RestUtils.decodeQueryString(servletRequest.getQueryString(), 0, params);
@@ -46,8 +43,7 @@ public class ServletRestRequest extends RestRequest {
     public String uri() {
         String queryString = servletRequest.getQueryString();
         if (queryString != null && !queryString.trim().isEmpty()) {
-            return servletRequest.getRequestURI().substring(servletRequest.getContextPath().length() + servletRequest.getServletPath().length())
-                    + "?" + queryString;
+            return servletRequest.getRequestURI().substring(servletRequest.getContextPath().length() + servletRequest.getServletPath().length()) + "?" + queryString;
         }
         return servletRequest.getRequestURI().substring(servletRequest.getContextPath().length() + servletRequest.getServletPath().length());
     }
@@ -83,8 +79,8 @@ public class ServletRestRequest extends RestRequest {
             return null;
         }
 
-        Map<String, String> headers = new HashMap<String, String>();
-        for (Enumeration<String> e = servletRequest.getHeaderNames(); e.hasMoreElements();) {
+        Map<String, String> headers = new HashMap<>();
+        for (Enumeration<String> e = servletRequest.getHeaderNames(); e.hasMoreElements(); ) {
             String headerName = e.nextElement();
             headers.put(headerName, servletRequest.getHeader(headerName));
         }

@@ -1,12 +1,10 @@
 http:
   rootPath: /service/*
+  port: 64000
 defaultInterval: 60000
 restFetchers:
-  - host: http://localhost/metrics
+  - host: http://localhost:2000/partsregister/admin/metrics
     interval: 10000
     tags:
-      application: 123
+      application: partsregister
       host: localhost
-      minTag: tada
-      terje: erKul
-  - host: http://localhost/metrics2
