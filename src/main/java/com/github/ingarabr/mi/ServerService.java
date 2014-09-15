@@ -1,16 +1,10 @@
 package com.github.ingarabr.mi;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Timer;
-import java.util.concurrent.ExecutionException;
-
 import com.github.ingarabr.mi.mapper.CodahaleMetricV3Mapper;
 import com.github.ingarabr.mi.mapper.DefaultMapper;
 import com.github.ingarabr.mi.mapper.MetricMapper;
 import com.github.ingarabr.mi.servlet.ElasticSearchHttpServlet;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.CharStreams;
@@ -18,13 +12,20 @@ import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.assets.AssetsBundle;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
-
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Timer;
+import java.util.concurrent.ExecutionException;
 
 public class ServerService extends Service<ServerConfiguration> {
 
@@ -72,21 +73,50 @@ public class ServerService extends Service<ServerConfiguration> {
         }
 
         logger.info("Setting up elasticSearch");
-        node = NodeBuilder.nodeBuilder()
-                .settings(ImmutableSettings.builder()
-                                .put("http.enabled", false)
-                                .put("node.local", true)
-                                .put("discovery.zen.ping.multicast.enabled", false)
-                )
-                .build();
-        node.start();
-        environment.addResource(new MyResource(node.client()));
+        Client client;
+        if (configuration.getEs().isEmbedded()) {
+            ImmutableSettings.Builder settings = ImmutableSettings.builder()
+                    .put("http.enabled", false)
+                    .put("node.local", true)
+                    .put("discovery.zen.ping.multicast.enabled", false)
+                    .put("cluster.name", configuration.getEs().getClusterName());
 
-        ElasticSearchHttpServlet elasticSearchHttpServlet = new ElasticSearchHttpServlet(node);
-        environment.addServlet(elasticSearchHttpServlet, "/es/*");
-        createIndexTemplate(node.client());
+            node = NodeBuilder.nodeBuilder()
+                    .settings(settings)
+                    .build();
+            node.start();
+            client = node.client();
+            ElasticSearchHttpServlet elasticSearchHttpServlet = new ElasticSearchHttpServlet(node);
+            environment.addServlet(elasticSearchHttpServlet, "/es/*");
+        } else {
+            List<String> servers = new ArrayList<>();
+            for (ServerConfiguration.EsHost host : configuration.getEs().getHosts()) {
+                servers.add(host.getHost() + ":" + host.getPort());
+            }
 
-        esWriter.setEsClient(node.client());
+            Settings settings = ImmutableSettings.settingsBuilder()
+                    .put("http.enabled", "false")
+                    .put("cluster.name", configuration.getEs().getClusterName())
+                    .put("discovery.zen.ping.multicast.enabled", false)
+                    .put("discovery.zen.ping.unicast.hosts", Joiner.on(",").join(servers))
+                    .build();
+
+            node = NodeBuilder.nodeBuilder()
+                    .settings(settings)
+                    .client(true)
+                    .clusterName(configuration.getEs().getClusterName())
+                    .build();
+            node.start();
+
+            client = node.client();
+            ElasticSearchHttpServlet elasticSearchHttpServlet = new ElasticSearchHttpServlet(node);
+            environment.addServlet(elasticSearchHttpServlet, "/es/*");
+        }
+
+        environment.addResource(new MyResource(client));
+        createIndexTemplate(client);
+
+        esWriter.setEsClient(client);
         esWriterThread = new Thread(esWriter);
         esWriterThread.start();
 

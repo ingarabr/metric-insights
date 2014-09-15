@@ -5,6 +5,8 @@ import java.util.TimerTask;
 
 import com.github.ingarabr.mi.mapper.MetricMapper;
 
+import com.sun.jersey.api.client.ClientHandlerException;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,8 +32,10 @@ public class MetricFetcher extends TimerTask {
             for (String toStore : mapper.map(metrics, tags)) {
                 esClient.addMetric(toStore);
             }
+        } catch (ClientHandlerException | UniformInterfaceException e ) {
+            logger.info("Failed to fetch {}, {}", restClient.getPath(), e.getMessage());
         } catch (Exception e) {
-            logger.warn("Unexpected error on " + restClient.toString(), e);
+            logger.warn("Unexpected error on {}", restClient.toString(), e);
         }
     }
 

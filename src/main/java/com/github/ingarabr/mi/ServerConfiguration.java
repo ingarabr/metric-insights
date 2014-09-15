@@ -1,14 +1,13 @@
 package com.github.ingarabr.mi;
 
 
+import com.yammer.dropwizard.config.Configuration;
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.hibernate.validator.constraints.NotEmpty;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import com.yammer.dropwizard.config.Configuration;
-
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.hibernate.validator.constraints.NotEmpty;
 
 public class ServerConfiguration extends Configuration {
 
@@ -21,6 +20,8 @@ public class ServerConfiguration extends Configuration {
     @JsonProperty
     private Integer defaultInterval = 60000;
 
+    private Es es = new Es();
+
     public List<RestFetcher> getRestFetchers() {
         return restFetchers;
     }
@@ -31,6 +32,49 @@ public class ServerConfiguration extends Configuration {
 
     public Integer getDefaultInterval() {
         return defaultInterval;
+    }
+
+    public Es getEs() {
+        return es;
+    }
+
+    public static class Es {
+        @JsonProperty
+        private boolean embedded = true;
+
+        @JsonProperty
+        private String clusterName;
+
+        @JsonProperty
+        private List<EsHost> hosts = new ArrayList<>();
+
+        public boolean isEmbedded() {
+            return embedded;
+        }
+
+        public List<EsHost> getHosts() {
+            return hosts;
+        }
+
+        public String getClusterName() {
+            return clusterName;
+        }
+    }
+
+    public static class EsHost {
+        @JsonProperty
+        private String host;
+
+        @JsonProperty
+        private Integer port;
+
+        public String getHost() {
+            return host;
+        }
+
+        public Integer getPort() {
+            return port;
+        }
     }
 
     public static class RestFetcher {

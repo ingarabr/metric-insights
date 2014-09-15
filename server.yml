@@ -2,6 +2,12 @@ http:
   rootPath: /service/*
   port: 64000
 defaultInterval: 60000
+es:
+  embedded: false
+  clusterName: metrics
+  hosts:
+  - host: localhost
+    port: 9300
 restFetchers:
   - host: http://localhost:2000/partsregister/admin/metrics
     interval: 10000

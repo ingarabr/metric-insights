@@ -32,11 +32,20 @@ public class EsWriter implements Runnable {
         }
         try {
             while (run) {
-                String metric = writeQueue.take();
-                log();
-                if (metric != null) {
-                    String indexName = "metrics-" + DateTime.now(DateTimeZone.UTC).toString(DTF);
-                    esClient.prepareIndex(indexName, "metric").setSource(metric).get();
+                String metric = null;
+                try {
+                    metric = writeQueue.take();
+                    log();
+                    if (metric != null) {
+                        String indexName = "metrics-" + DateTime.now(DateTimeZone.UTC).toString(DTF);
+                        esClient.prepareIndex(indexName, "metric").setSource(metric).get();
+                    }
+                } catch (Exception e) {
+                    logger.warn("error", e);
+                    if (metric != null) {
+                        writeQueue.put(metric);
+                    }
+                    Thread.sleep(1000);
                 }
             }
         } catch (InterruptedException e) {

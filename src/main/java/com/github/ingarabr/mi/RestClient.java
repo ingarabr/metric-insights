@@ -20,6 +20,9 @@ public class RestClient {
         return httpClient.resource(path).get(String.class);
     }
 
+    public String getPath() {
+        return path;
+    }
 
     @Override
     public String toString() {

@@ -15,6 +15,17 @@
         <java.version>1.7</java.version>
     </properties>
 
+    <distributionManagement>
+        <repository>
+            <id>releases</id>
+            <url>http://aurora/nexus/content/repositories/releases</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshots</id>
+            <url>http://aurora/nexus/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
+
     <dependencies>
 
         <dependency>
@@ -107,6 +118,10 @@
     <profiles>
         <profile>
             <id>onejar</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+
             <build>
                 <plugins>
                     <plugin>
@@ -117,5 +132,6 @@
             </build>
         </profile>
     </profiles>
+
 
 </project>
