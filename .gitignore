@@ -3,3 +3,4 @@ atlassian-ide-plugin.xml
 *.iml
 target/
 data/
+logs/
