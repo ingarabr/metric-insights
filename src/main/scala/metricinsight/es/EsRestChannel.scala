@@ -5,17 +5,17 @@ import unfiltered.response.HttpResponse
 import javax.servlet.http.HttpServletResponse
 import java.io.OutputStream
 import java.util.concurrent.CountDownLatch
+import org.slf4j.LoggerFactory
 
 case class EsRestChannel(req: EsRestRequest, resWrapper: HttpResponse[HttpServletResponse]) extends RestChannel {
 
+  val logger = LoggerFactory.getLogger(classOf[EsRestChannel])
   val res = resWrapper.underlying
   val lock = new CountDownLatch(1)
 
   var fault: Option[Exception] = None
 
   def sendResponse(response: RestResponse) = failable {
-    println(s"Tries to respond to ES request ${response.status().getStatus}")
-
     res.setStatus(response.status().getStatus)
     res.setContentType(response.contentType())
     val opaque = Option(req.header("X-Opaque-Id"))
@@ -40,7 +40,7 @@ case class EsRestChannel(req: EsRestRequest, resWrapper: HttpResponse[HttpServle
       canFail
     } catch {
       case e: Exception => {
-        println(s"Somehting vent wrong ${e}")
+        logger.warn("Failed to respond", e)
         e.printStackTrace(System.err)
         fault = Some(e)
       }

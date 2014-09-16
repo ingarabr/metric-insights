@@ -7,6 +7,7 @@ import scala.collection.mutable
 import scala.util.Try
 
 object Configuration {
+
   val conf = ConfigFactory.parseFile(new File("./app.conf")).withFallback(
     ConfigFactory.parseResources("appDefault.conf"))
 
@@ -19,7 +20,6 @@ object Configuration {
       val list: mutable.Buffer[_ <: Config] = conf.getConfigList("fetchers").asScala
       list.map(FetcherConfig(_)).toList
     } else {
-      println("Unable to find fetcher")
       List()
     }
 

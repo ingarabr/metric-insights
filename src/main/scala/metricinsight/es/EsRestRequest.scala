@@ -32,13 +32,7 @@ class EsRestRequest(req: HttpRequest[HttpServletRequest]) extends RestRequest {
     }
   }
 
-  def rawPath(): String = {
-    val p = servletRequest.getRequestURI.substring(3
-      //  servletRequest.getContextPath.length() + servletRequest.getServletPath.length()
-    )
-    println(s"rawPath: $p")
-    p
-  }
+  def rawPath(): String = servletRequest.getRequestURI.substring(3)
 
   def hasContent: Boolean = cont.length > 0
 
