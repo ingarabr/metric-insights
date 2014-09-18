@@ -11,14 +11,36 @@
             "_all": {
                 "enabled": false
             },
+            "_source": {
+                "enabled": false
+            },
             "dynamic_templates": [
                 {
+                    "docvalues_template": {
+                        "match": "*",
+                        "mapping": {
+                            "type": "{dynamic_type}",
+                            "index": "not_analyzed",
+                            "doc_values_format": "disk",
+                            "doc_values": true,
+                            "fielddata": {
+                                "format": "doc_values"
+                            }
+                        }
+                    }
+                }, {
                     "string_template": {
                         "match": "*",
                         "match_mapping_type": "string",
                         "mapping": {
                             "type": "string",
-                            "index": "not_analyzed"
+                            "index": "not_analyzed",
+                            "omit_norms": true,
+                            "omit_term_freq_and_positions": true,
+                            "include_in_all": "no",
+                            "fielddata": {
+                                "format": "doc_values"
+                            }
                         }
                     }
                 }
