@@ -3,14 +3,14 @@ http:
   port: 64000
 defaultInterval: 60000
 es:
-  embedded: false
+  embedded: true
   clusterName: metrics
   hosts:
   - host: localhost
     port: 9300
 restFetchers:
-  - host: http://localhost:2000/partsregister/admin/metrics
+  - host: http://localhost:64000/service/metrics
     interval: 10000
     tags:
-      application: partsregister
+      application: metrics
       host: localhost

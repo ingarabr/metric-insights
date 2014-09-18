@@ -5,14 +5,13 @@ import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.net.URL;
 import java.util.List;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.io.CharStreams;
-import com.google.common.io.InputSupplier;
 
+import com.google.common.io.Resources;
 import org.junit.Test;
 
 public class CodahaleMetricV3MapperTest {
@@ -21,9 +20,9 @@ public class CodahaleMetricV3MapperTest {
 
     @Test
     public void shouldMapToCustomFormat() throws Exception {
-        InputStream is = getClass().getResourceAsStream("/codahale_metric_v3.json");
+        String metric = getResourceAsString();
 
-        List<String> map = mapper.map(getStringFromIs(is), ImmutableMap.of("host", "localhost"));
+        List<String> map = mapper.map(metric, ImmutableMap.of("host", "localhost"));
 
         assertThat(map.get(0), not(containsString("gauges\":{\"gc.PS-MarkSweep.count\"")));
         assertThat(map.get(0), containsString("\"name\":\"gc.PS-MarkSweep.count\""));
@@ -34,12 +33,9 @@ public class CodahaleMetricV3MapperTest {
         mapper.map("{\"version\": \"2.0.0\"}", ImmutableMap.of("host", "localhost"));
     }
 
-    private String getStringFromIs(final InputStream is) throws IOException {
-        return CharStreams.toString(CharStreams.newReaderSupplier(new InputSupplier<InputStream>() {
-            public InputStream getInput() throws IOException {
-                return is;
-            }
-        }, Charsets.UTF_8));
+    private String getResourceAsString() throws IOException {
+        URL resource = Resources.getResource("codahale_metric_v3.json");
+        return Resources.toString(resource, Charsets.UTF_8);
     }
 
 }

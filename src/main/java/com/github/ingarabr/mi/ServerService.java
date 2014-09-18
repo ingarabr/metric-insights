@@ -1,8 +1,15 @@
 package com.github.ingarabr.mi;
 
+import com.codahale.metrics.JvmAttributeGaugeSet;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.jvm.FileDescriptorRatioGauge;
+import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
+import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
+import com.codahale.metrics.jvm.ThreadStatesGaugeSet;
 import com.github.ingarabr.mi.mapper.CodahaleMetricV3Mapper;
 import com.github.ingarabr.mi.mapper.DefaultMapper;
 import com.github.ingarabr.mi.mapper.MetricMapper;
+import com.github.ingarabr.mi.metrics.CpuMetricSet;
 import com.github.ingarabr.mi.servlet.ElasticSearchHttpServlet;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -39,6 +46,7 @@ public class ServerService extends Service<ServerConfiguration> {
 
     private final ArrayList<Timer> tasks = new ArrayList<>();
     private final EsWriter esWriter;
+    private final MetricRegistry metricRegistry;
     private Node node;
     private Thread esWriterThread;
 
@@ -55,7 +63,19 @@ public class ServerService extends Service<ServerConfiguration> {
     }
 
     public ServerService() {
-        esWriter = new EsWriter();
+        metricRegistry = lagDefaultMetrics();
+        esWriter = new EsWriter(metricRegistry);
+    }
+
+    public static MetricRegistry lagDefaultMetrics() {
+        MetricRegistry metrics = new MetricRegistry();
+        metrics.register("gc", new GarbageCollectorMetricSet());
+        metrics.register("thread", new ThreadStatesGaugeSet());
+        metrics.register("jvm", new JvmAttributeGaugeSet());
+        metrics.register("memory", new MemoryUsageGaugeSet());
+        metrics.register("fd_usage", new FileDescriptorRatioGauge());
+        metrics.register("cpu", new CpuMetricSet());
+        return metrics;
     }
 
     @Override
@@ -113,7 +133,7 @@ public class ServerService extends Service<ServerConfiguration> {
             environment.addServlet(elasticSearchHttpServlet, "/es/*");
         }
 
-        environment.addResource(new MyResource(client));
+        environment.addResource(new MyResource(client, metricRegistry));
         createIndexTemplate(client);
 
         esWriter.setEsClient(client);
@@ -158,7 +178,8 @@ public class ServerService extends Service<ServerConfiguration> {
         Timer fetcher = new Timer("fetcher", true);
         MetricMapper mapper = Optional.fromNullable(MAPPERS.get(restFetcher.getMapper())).or(MAPPERS.get(DEFAULT_MAPPER));
 
-        fetcher.schedule(new MetricFetcher(esWriter, new RestClient(restFetcher.getHost()), restFetcher.getTags(), mapper), 1000, interval);
+        fetcher.schedule(new MetricFetcher(esWriter, new RestClient(restFetcher.getHost()), restFetcher.getTags(), mapper, metricRegistry), 1000,
+                interval);
         tasks.add(fetcher);
     }
 

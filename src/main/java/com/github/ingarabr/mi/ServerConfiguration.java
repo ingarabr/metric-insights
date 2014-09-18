@@ -43,7 +43,7 @@ public class ServerConfiguration extends Configuration {
         private boolean embedded = true;
 
         @JsonProperty
-        private String clusterName;
+        private String clusterName = "metrics";
 
         @JsonProperty
         private List<EsHost> hosts = new ArrayList<>();
