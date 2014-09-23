@@ -1,4 +1,4 @@
-package com.github.ingarabr.mi;
+package com.github.ingarabr.mi.collection;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.config.DefaultClientConfig;

@@ -1,4 +1,4 @@
-package com.github.ingarabr.mi;
+package com.github.ingarabr.mi.collection;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
